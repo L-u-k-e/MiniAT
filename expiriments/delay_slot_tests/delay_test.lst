@@ -1,0 +1,78 @@
+ 1:                                  	<<<
+ 2:                                  	
+ 3:                                  	Results:
+ 4:                                  	  Starting Values                  ->  15AD    
+ 5:   . . . . . . . . . . . . . . . .	  BRA  [!blueberry]                ->  25AD  1 cycle delay (expected this one)
+ 6:                                  	  BRAE [!blueberry : F], r0 == r0  ->  26BD  3 cycle delay (no flush at all)
+ 7:                                  	  BRAE [!blueberry : T], r0 == r0  ->  26BD  ? (there's an assembler bug, hint bit not set) 
+ 8:                                  	
+ 9:                                  	
+10:   . . . . . . . . . . . . . . . .	Instruction Encodings: 
+11:                                  	  BRA  [!blueberry]                 ->  5600...
+12:                                  	  BRAE [!blueberry : F], r0 == r0   ->  1600...
+13:                                  	  BRAE [!blueberry : T], r0 == r0   ->  1600...
+14:                                  	
+15:   . . . . . . . . . . . . . . . .	  The encoding must be:
+16:                                  	
+17:                                  	    [?][H][?][opcode x 5][rA x 8][rB x 8][rC x 8][imm x 32]
+18:                                  	    
+19:                                  	    The ? are P and R, I'm just not sure which is which. 
+20:   . . . . . . . . . . . . . . . .	    How do I use predication?
+21:                                  	
+22:                                  	
+23:                                  	Notes on FLUSH:
+24:                                  	  This hint false business makes FLUSH a tricky bastard.
+25:   . . . . . . . . . . . . . . . .	
+26:                                  	  Current implementation:
+27:                                  	    FLUSH = BRAE [PC : F], r0 == r0 
+28:                                  	
+29:                                  	  Original implementaion:
+30:   . . . . . . . . . . . . . . . .	    FLUSH = BRANE [PC : T], r0 == r0 
+31:                                  	
+32:                                  	
+33:                                  	  The current implementaion has a 3 cycle delay slot and it doesn't even flush the pipeline. 
+34:                                  	  The original implementaion has a 1 cycle delay slot (which is noted in the thesis) but it does
+35:   . . . . . . . . . . . . . . . .	  actually clear the pipeline. 
+36:                                  	
+37:                                  	>>>
+38:                                  	
+39:                                  	.constant TERM  0x4000
+40:  [0x2000]  0x00290000  0x0000000D	MOVI r41 = 0xD         #CR
+41:  [0x2002]  0x002A0000  0x0000000A	MOVI r42 = 0xA         #LF
+42:                                  	
+43:                                  	
+44:  [0x2004]  0x00010000  0x00000031	MOVI r1 = '1'
+45:  [0x2006]  0x00020000  0x00000035	MOVI r2 = '5'
+46:  [0x2008]  0x00030000  0x00000041	MOVI r3 = 'A'
+47:  [0x200A]  0x00040000  0x00000044	MOVI r4 = 'D'
+48:  [0x200C]  0x11010000  0x00004000	STOR [TERM] = r1
+49:  [0x200E]  0x11020000  0x00004000	STOR [TERM] = r2
+50:  [0x2010]  0x11030000  0x00004000	STOR [TERM] = r3
+51:  [0x2012]  0x11040000  0x00004000	STOR [TERM] = r4
+52:  [0x2014]  0x11290000  0x00004000	STOR [TERM] = r41
+53:  [0x2016]  0x112A0000  0x00004000	STOR [TERM] = r42
+54:                                  	
+55:   . . . . . . . . . . . . . . . .	
+56:                                  	
+57:                                  	
+58:                                  	.mode NOP_DELAY off
+59:                                  	
+60:   . . . . . . . . . . . . . . . .	# BRAE [!blueberry : F], r0 == r0
+61:                                  	# BRAE [!blueberry : T], r0 == r0
+62:                                  	# BRA [!blueberry]
+63:                                  	
+64:  [0x2018]  0x00010100  0x00000001	ADD r1 = r1 + 1
+65:  [0x201A]  0x00020200  0x00000001	ADD r2 = r2 + 1
+66:  [0x201C]  0x00030300  0x00000001	ADD r3 = r3 + 1
+67:  [0x201E]  0x00040400  0x00000001	ADD r4 = r4 + 1
+68:                                  	
+69:                                  	
+70:   . . . . . . . . . . . . . . . .	!blueberry
+71:                                  	  #gonna be hazards, but won't affect output.
+72:  [0x2020]  0x11010000  0x00004000	  STOR [TERM] = r1
+73:  [0x2022]  0x11020000  0x00004000	  STOR [TERM] = r2
+74:  [0x2024]  0x11030000  0x00004000	  STOR [TERM] = r3
+75:  [0x2026]  0x11040000  0x00004000	  STOR [TERM] = r4
+76:  [0x2028]  0x11290000  0x00004000	  STOR [TERM] = r41
+77:  [0x202A]  0x112A0000  0x00004000	  STOR [TERM] = r42
+78:                                  	

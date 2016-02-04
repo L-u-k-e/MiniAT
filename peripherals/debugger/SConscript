@@ -1,0 +1,7 @@
+Import('*')
+
+NAME = 'debugger'
+INC =  [ 'inc', '#/vm/inc', '#/vm/src' ]
+SRC = Glob('src/*.c')
+
+buildSharedLibrary(NAME, SRC, CPPPATH=INC)

@@ -1,0 +1,9 @@
+Import('*')
+
+buildProgram('lemon', 'lemon.c', CPPPATH=[ '#/vm/src' ] )
+
+buildFlex('lex.yy.c', 'mash.lex')
+
+buildLemon('mash.y')
+
+buildProgram("mash", ['mash.c', 'lex.yy.c', 'util.c', 'symbol_tables.c', 'list.c', 'token.c', 'listing.c', 'blocks.c'], CPPPATH=[ '#/vm/src/', '#/vm/inc' ])
