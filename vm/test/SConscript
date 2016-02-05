@@ -28,5 +28,9 @@ buildMash('asms/timer_time.asm')
 buildMash('asms/timer_toggle.asm')
 buildMash('asms/watchdog.asm')
 
+buildMash('asms/branch_delay.asm')
+
+
+
 env.Depends(r, t)
 env.Depends(x, r)

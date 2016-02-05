@@ -19,7 +19,7 @@ void t_error___exec_bus_read(CuTest *tc) {
 
 	char *path = OUTDIR"/bin/bus_read.bin";
 	bin_file = fopen(path, "rb");
-	CuAssert(tc, path, bin_file != NULL);
+	CuAssert(tc, "Should not be NULL", bin_file != NULL);
 
 	miniat = miniat_new (bin_file);
 	CuAssert(tc, "Should not be NULL", miniat != NULL);
