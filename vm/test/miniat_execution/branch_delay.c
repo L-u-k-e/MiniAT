@@ -1,3 +1,24 @@
+/*
+ * This code is meant to test the behavior of the delay slots when 
+ * branching/ hinting true or false.  
+ *
+ * The expected behavior is as follows:
+ *    Hint      Result      Delay Slot(s)       Other Behavior
+ *    -------------------------------------------------------------------------
+ *    True      True             1              N/A  
+ *    False     True             3              N/A
+ *    True      False            N/A            Flush should occur  
+ *    False     False            N/A            Code should fall right through.
+ *
+ * 
+ * Extra Note: 
+ *   In all tests below, the expected values of r5, r6 and r7 are all 1. 
+ *   These registers are incremented in turn at the branch target.    
+ *   The rational is that, if the flush (case 3 above) doesn't work properly,
+ *   then they would be incremented multiple times. 
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,11 +29,6 @@
 #include "miniat_priv_hazards.h"
 
 #include "CuTest.h"
-
-
-
-
-
 
 
 
@@ -47,11 +63,8 @@ void t_exec___branch_delay(CuTest *tc) {
 
 
   /* Process instructions until we reach the end of section 1. */
-  while(true) {
-    miniat_clock(miniat);
-    if(miniat->pipeline.fetch.out.NPC == 0x201E) {
-      break;
-    }
+  while(miniat->reg[100] != 1) { 
+    miniat_clock(miniat); 
   }
 
   /* 
@@ -76,10 +89,13 @@ void t_exec___branch_delay(CuTest *tc) {
    *   r3: 'A'
    *   r4: 'D'
    */
-  CuAssert(tc, "Register 1 should be 0x32 ('2')", miniat->reg[1] == 0x32); 
-  CuAssert(tc, "Register 2 should be 0x35 ('5')", miniat->reg[2] == 0x35); 
-  CuAssert(tc, "Register 3 should be 0x41 ('A')", miniat->reg[3] == 0x41); 
-  CuAssert(tc, "Register 4 should be 0x44 ('D')", miniat->reg[4] == 0x44); 
+  CuAssert(tc, "Register 1 should be '2'", miniat->reg[1] == '2'); 
+  CuAssert(tc, "Register 2 should be '5'", miniat->reg[2] == '5'); 
+  CuAssert(tc, "Register 3 should be 'A'", miniat->reg[3] == 'A'); 
+  CuAssert(tc, "Register 4 should be 'D'", miniat->reg[4] == 'D'); 
+  CuAssert(tc, "Register 5 should be 1",   miniat->reg[5] ==  1 ); 
+  CuAssert(tc, "Register 6 should be 1",   miniat->reg[6] ==  1 ); 
+  CuAssert(tc, "Register 7 should be 1",   miniat->reg[7] ==  1 ); 
 
 
 
@@ -92,11 +108,8 @@ void t_exec___branch_delay(CuTest *tc) {
 
 
   /* Process instructions until we reach the end of section 2. */
-  while(true) {
-    miniat_clock(miniat);
-    if(miniat->pipeline.fetch.out.NPC == 0x203E) {
-      break;
-    }
+  while(miniat->reg[100] != 2) { 
+    miniat_clock(miniat); 
   }
 
   /* 
@@ -121,11 +134,13 @@ void t_exec___branch_delay(CuTest *tc) {
    *   r3: 'B'
    *   r4: 'E'
    */
-  CuAssert(tc, "Register 1 should be 0x32 ('2')", miniat->reg[1] == 0x32); 
-  CuAssert(tc, "Register 2 should be 0x36 ('6')", miniat->reg[2] == 0x36); 
-  CuAssert(tc, "Register 3 should be 0x42 ('B')", miniat->reg[3] == 0x42); 
-  CuAssert(tc, "Register 4 should be 0x45 ('E')", miniat->reg[4] == 0x45); 
-
+  CuAssert(tc, "Register 1 should be '2'", miniat->reg[1] == '2'); 
+  CuAssert(tc, "Register 2 should be '6'", miniat->reg[2] == '6'); 
+  CuAssert(tc, "Register 3 should be 'B'", miniat->reg[3] == 'B'); 
+  CuAssert(tc, "Register 4 should be 'E'", miniat->reg[4] == 'E'); 
+  CuAssert(tc, "Register 5 should be 1",   miniat->reg[5] ==  1 ); 
+  CuAssert(tc, "Register 6 should be 1",   miniat->reg[6] ==  1 ); 
+  CuAssert(tc, "Register 7 should be 1",   miniat->reg[7] ==  1 ); 
 
 
 
@@ -137,11 +152,8 @@ void t_exec___branch_delay(CuTest *tc) {
 
 
   /* Process instructions until we reach the end of section 3. */
-  while(true) {
-    miniat_clock(miniat);
-    if(miniat->pipeline.fetch.out.NPC == 0x205E) {
-      break;
-    }
+  while(miniat->reg[100] != 3) { 
+    miniat_clock(miniat); 
   }
 
   /* 
@@ -166,11 +178,13 @@ void t_exec___branch_delay(CuTest *tc) {
    *   r3: 'B'
    *   r4: 'D'
    */
-  CuAssert(tc, "Register 1 should be 0x32 ('2')", miniat->reg[1] == 0x32); 
-  CuAssert(tc, "Register 2 should be 0x36 ('6')", miniat->reg[2] == 0x36); 
-  CuAssert(tc, "Register 3 should be 0x42 ('B')", miniat->reg[3] == 0x42); 
-  CuAssert(tc, "Register 4 should be 0x44 ('D')", miniat->reg[4] == 0x44); 
- 
+  CuAssert(tc, "Register 1 should be '2'", miniat->reg[1] == '2'); 
+  CuAssert(tc, "Register 2 should be '6'", miniat->reg[2] == '6'); 
+  CuAssert(tc, "Register 3 should be 'B'", miniat->reg[3] == 'B'); 
+  CuAssert(tc, "Register 4 should be 'D'", miniat->reg[4] == 'D'); 
+  CuAssert(tc, "Register 5 should be 1",   miniat->reg[5] ==  1 ); 
+  CuAssert(tc, "Register 6 should be 1",   miniat->reg[6] ==  1 ); 
+  CuAssert(tc, "Register 7 should be 1",   miniat->reg[7] ==  1 );  
 
 
 
@@ -182,11 +196,8 @@ void t_exec___branch_delay(CuTest *tc) {
 
 
   /* Process instructions until we reach the end of section 4. */
-  while(true) {
-    miniat_clock(miniat);
-    if(miniat->pipeline.fetch.out.NPC == 0x207E) {
-      break;
-    }
+  while(miniat->reg[100] != 4) { 
+    miniat_clock(miniat); 
   }
 
   /* 
@@ -206,16 +217,18 @@ void t_exec___branch_delay(CuTest *tc) {
    *   r4: 'D'
    *
    * Expected ending values:
-   *   r1: '1'
-   *   r2: '5'
-   *   r3: 'A'
-   *   r4: 'D'
+   *   r1: '2'
+   *   r2: '6'
+   *   r3: 'B'
+   *   r4: 'E'
    */
-  CuAssert(tc, "Register 1 should be 0x31 ('1')", miniat->reg[1] == 0x31); 
-  CuAssert(tc, "Register 2 should be 0x35 ('5')", miniat->reg[2] == 0x35); 
-  CuAssert(tc, "Register 3 should be 0x41 ('A')", miniat->reg[3] == 0x41); 
-  CuAssert(tc, "Register 4 should be 0x44 ('D')", miniat->reg[4] == 0x44);  
-
+  CuAssert(tc, "Register 1 should be '2'", miniat->reg[1] == '2'); 
+  CuAssert(tc, "Register 2 should be '6'", miniat->reg[2] == '6'); 
+  CuAssert(tc, "Register 3 should be 'B'", miniat->reg[3] == 'B'); 
+  CuAssert(tc, "Register 4 should be 'E'", miniat->reg[4] == 'E');  
+  CuAssert(tc, "Register 5 should be 1",   miniat->reg[5] ==  1 ); 
+  CuAssert(tc, "Register 6 should be 1",   miniat->reg[6] ==  1 ); 
+  CuAssert(tc, "Register 7 should be 1",   miniat->reg[7] ==  1 ); 
 
 
 
@@ -227,11 +240,8 @@ void t_exec___branch_delay(CuTest *tc) {
 
 
   /* Process instructions until we reach the end of section 5. */
-  while(true) {
-    miniat_clock(miniat);
-    if(miniat->pipeline.fetch.out.NPC == 0x209E) {
-      break;
-    }
+  while(miniat->reg[100] != 5) { 
+    miniat_clock(miniat); 
   }
 
   /* 
@@ -256,11 +266,13 @@ void t_exec___branch_delay(CuTest *tc) {
    *   r3: 'A'
    *   r4: 'D'
    */
-  CuAssert(tc, "Register 1 should be 0x31 ('2')", miniat->reg[1] == 0x32); 
-  CuAssert(tc, "Register 2 should be 0x35 ('5')", miniat->reg[2] == 0x35); 
-  CuAssert(tc, "Register 3 should be 0x41 ('A')", miniat->reg[3] == 0x41); 
-  CuAssert(tc, "Register 4 should be 0x44 ('D')", miniat->reg[4] == 0x44);  
-
+  CuAssert(tc, "Register 1 should be '2'", miniat->reg[1] == '2'); 
+  CuAssert(tc, "Register 2 should be '5'", miniat->reg[2] == '5'); 
+  CuAssert(tc, "Register 3 should be 'A'", miniat->reg[3] == 'A'); 
+  CuAssert(tc, "Register 4 should be 'D'", miniat->reg[4] == 'D');  
+  CuAssert(tc, "Register 5 should be 1",   miniat->reg[5] ==  1 ); 
+  CuAssert(tc, "Register 6 should be 1",   miniat->reg[6] ==  1 ); 
+  CuAssert(tc, "Register 7 should be 1",   miniat->reg[7] ==  1 ); 
 
 
 
