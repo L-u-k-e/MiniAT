@@ -12,7 +12,7 @@ addDoc("manual.pdf", "doc/miniat_thesis.pdf")
 
 
 # OSX and others don't allow for undefined symbols during link. In *Nix, the python symbols can be resolved
-# at load time, on OSX it frekas out
+# at load time, on OSX it freaks out
 # Don't clobber the LIBPATH set up in the SCons Environment
 libdir = distutils.sysconfig.get_config_var('LIBDIR')
 LIBPATH = [ env["LIBPATH"], libdir]

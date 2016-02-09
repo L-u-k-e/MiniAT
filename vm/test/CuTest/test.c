@@ -1,13 +1,13 @@
-/* This is auto-generated code. Edit at your own peril. */
 #include <stdio.h>
 #include "CuTest.h"
+#include "test_suites.h"
 
 void RunAllTests(void)
 {
     int i;
     FILE *fp;
     CuSuite* suite = CuSuiteNew();
-
+    add_all_tests(suite);
     CuSuiteRun(suite);
 
     fp = fopen(UNITTESTLOG, "a+");

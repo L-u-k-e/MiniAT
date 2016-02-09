@@ -172,7 +172,7 @@ def getModuleLocation(module):
 
 	# Install langauage specific stuff in:
 	# out/<language>/<module>/...
-	# thus Pyhton things defined in vm/SConscript will go to:
+	# thus Python things defined in vm/SConscript will go to:
 	#   out/python/vm/...
 	base = Dir('.').path
 	base = base.split(os.path.sep)[-1]
@@ -231,6 +231,7 @@ def addPrebuiltTool(name, path, layout='', prog='', comstr=None):
 	return env.InstallAs(install_path, path)
 
 def useTool(name, target, src):
+	print getattr(env, name)
 	return getattr(env, name)(target, src)
 
 def buildSwig(*args, **kwargs):
