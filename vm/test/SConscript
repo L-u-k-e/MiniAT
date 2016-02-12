@@ -1,29 +1,31 @@
 import os
 Import('*')
 
+
 #Install the make-tests python script
-EXE = "python"
-SCRIPT = "make-tests2.py"
+EXE = "python2.7"
+SCRIPT = "make-tests"
 SRC = "CuTest/make-tests2.py"
 ARGS = "-t $TARGET $SOURCES"
-COMSTR = EXE + " " + SCRIPT + " " + ARGS if VERBOSE else "GEN $TARGET"
+COMSTR = EXE + " " + SCRIPT + " " + ARGS #if VERBOSE else "GEN $TARGET"
 t = addPrebuiltTool(SCRIPT, SRC, ARGS, EXE, comstr=COMSTR)
 
 #Invoke the make-tests.py tool (which we just built)
 test_src = Glob('miniat_*/*.c')
-test_src.extend(Glob('CuTest/test_suites.c'))
-r = useTool('make-tests2.py', 'test.c', test_src )
+r = useTool('make-tests', 'test.c', test_src )
+
+
 
 #build and install the miniat_tests executable now that we've gathered up all the tests.
 NAME = 'miniat_tests'
-INC = [ 'CuTest', '#/vm/inc', '#/vm/src' ]
-SRC = [r, test_src, 'CuTest/CuTest.c']
+INC = [ '.', 'CuTest', '#/vm/inc', '#/vm/src' ]
+SRC = ['test.c', 'test_suites.c', 'CuTest/CuTest.c', test_src]
 x = buildProgram(NAME, SRC, CPPPATH=INC , LIBS='miniat')
 
 #assemble all the assembly files in the asms directory.
-asms = Glob('asms/*.asm')
-map(buildMash, asms)
-
+for file in Glob('asms/*.asm'): buildMash(file)
 
 env.Depends(r, t)
 env.Depends(x, r)
+
+

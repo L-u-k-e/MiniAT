@@ -209,29 +209,29 @@ def installFile(*args, **kwargs):
 	return x
 
 def buildProgram(*args, **kwargs):
+	print args
 	l = env.Program(*args, **kwargs)
 	x = env.Install(exedir, l)
 	return [l, x]
 
 def addDoc(name, path):
-	return env.InstallAs(os.path.join(docdir, name),
-							 path)
+	return env.InstallAs(os.path.join(docdir, name), path)
 
 def addPrebuiltTool(name, path, layout='', prog='', comstr=None):
 
 	install_path = os.path.join(exedir, name)
 	program = prog + ' ' + '"' + install_path + '"' + ' ' + layout
 	bld = SCons.Builder.Builder(
-		action=	SCons.Action.Action(
-				program,
-				comstr)
+		action =	SCons.Action.Action(
+			program,
+			comstr
+		)
 	)
 	env.Append(BUILDERS={name: bld})
 
 	return env.InstallAs(install_path, path)
 
 def useTool(name, target, src):
-	print getattr(env, name)
 	return getattr(env, name)(target, src)
 
 def buildSwig(*args, **kwargs):
