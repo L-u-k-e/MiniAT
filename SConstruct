@@ -209,7 +209,6 @@ def installFile(*args, **kwargs):
 	return x
 
 def buildProgram(*args, **kwargs):
-	print args
 	l = env.Program(*args, **kwargs)
 	x = env.Install(exedir, l)
 	return [l, x]

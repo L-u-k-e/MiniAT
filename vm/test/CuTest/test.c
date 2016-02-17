@@ -1,55 +1,56 @@
 #include <stdio.h>
 #include "CuTest.h"
-#include "test_suites.h"
 
-void RunAllTests(void)
-{
-    int i;
-    FILE *fp;
-    CuSuite* suite = CuSuiteNew();
-    add_all_tests(suite);
-    CuSuiteRun(suite);
+/* {{{_FUNCTION_SIGNATURES_}}}  <- Don't delete this comment! */
 
-    fp = fopen(UNITTESTLOG, "a+");
-    if(!fp) {
-        return;
-    }
+void RunAllTests(void) {
+	int i;
+	FILE *fp;
+	CuSuite* suite = CuSuiteNew();
 
-    for(i = 0; i < suite->count; i++) {
-        if(suite->list[i]->assertsFailedCount) {
-            fprintf(fp, "Failed\t");
-        }
-        else {
-            fprintf(fp, "Passed\t");
-        }
-        fprintf(fp, "%s\t", suite->list[i]->name);
-        fprintf(fp, "%d\t", suite->list[i]->assertsPassedCount);
-        fprintf(fp, "%d\t", suite->list[i]->assertsFailedCount);
-        fprintf(fp, "%d\t", (suite->list[i]->assertsPassedCount + suite->list[i]->assertsFailedCount));
-        fprintf(fp, "%3.3f\n", (((float)(suite->list[i]->assertsPassedCount) / (suite->list[i]->assertsPassedCount + suite->list[i]->assertsFailedCount)) * 100));
-    }
+	/* {{{_SUITE_ADDITIONS_}}}  <- Don't delete this comment! */
 
-    fflush(fp);
-    fclose(fp);
+	CuSuiteRun(suite);
 
-    fp = fopen(SUITELOG, "a+");
+	fp = fopen(UNITTESTLOG, "a+");
+	if(!fp) {
+		return;
+	}
 
-    if(suite->testFailedCount) {
-        fprintf(fp, "Failed\t");
-    }
-    else {
-        fprintf(fp, "Passed\t");
-    }
-    fprintf(fp, "%d\t", suite->testPassedCount);
-    fprintf(fp, "%d\t", suite->testFailedCount);
-    fprintf(fp, "%d\t", suite->count);
-    fprintf(fp, "%3.3f\n", ((float)(suite->testPassedCount) / suite->count) * 100);
-    fflush(fp);
-    fclose(fp);
+	for(i = 0; i < suite->count; i++) {
+		if(suite->list[i]->assertsFailedCount) {
+			fprintf(fp, "Failed\t");
+		}
+		else {
+			fprintf(fp, "Passed\t");
+		}
+		fprintf(fp, "%s\t", suite->list[i]->name);
+		fprintf(fp, "%d\t", suite->list[i]->assertsPassedCount);
+		fprintf(fp, "%d\t", suite->list[i]->assertsFailedCount);
+		fprintf(fp, "%d\t", (suite->list[i]->assertsPassedCount + suite->list[i]->assertsFailedCount));
+		fprintf(fp, "%3.3f\n", (((float)(suite->list[i]->assertsPassedCount) / (suite->list[i]->assertsPassedCount + suite->list[i]->assertsFailedCount)) * 100));
+	}
+
+	fflush(fp);
+	fclose(fp);
+
+	fp = fopen(SUITELOG, "a+");
+
+	if(suite->testFailedCount) {
+		fprintf(fp, "Failed\t");
+	}
+	else {
+		fprintf(fp, "Passed\t");
+	}
+	fprintf(fp, "%d\t", suite->testPassedCount);
+	fprintf(fp, "%d\t", suite->testFailedCount);
+	fprintf(fp, "%d\t", suite->count);
+	fprintf(fp, "%3.3f\n", ((float)(suite->testPassedCount) / suite->count) * 100);
+	fflush(fp);
+	fclose(fp);
 }
 
-int main(int argc, char *argv[])
-{
-    RunAllTests();
-    return 0;
+int main(int argc, char *argv[]) {
+	RunAllTests();
+	return 0;
 }

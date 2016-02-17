@@ -1,136 +1,86 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
 from optparse import OptionParser
 import re
-import sys
+import os
+import shutil
 
 
 class GenTest(object):
 
-    def __init__(
-        self,
-        outfile,
-        src,
-        function_prefix,
-        ):
+  def __init__(self, driver, src, function_prefix):
+    self._src = src
+    self._function_prefix = function_prefix.replace('\\', r'\\\\')
+    self._driver_contents = [line.rstrip() for line in open('vm/test/CuTest/test.c')]
+    self._out = open(driver, 'w')
 
-        self._src = src
-        self._outfile = outfile
-        self._function_prefix = function_prefix.replace('\\', r'\\\\')
+  # Open the file with the provided name and parse it for lines that start with
+  # the identified prefix. Use these lines to figure out the actual names of 
+  # all the test functions in the file and aggregate the names into a list. 
+  def _gen_tests_from_file(self, file_name):
+    f = open(file_name, 'r').readlines()
+    funcs = [l.split('(')[0].split()[1] for l in f if re.search(self._function_prefix, l)]
+    return funcs
 
-    def generate(self):
 
-        funcs = list()
-        self._outfile.write('/* This is auto-generated code. Edit at your own peril. */\n'
-                             + '#include <stdio.h>\n'
-                            + '#include "CuTest.h"\n')
 
-        for fn in self._src:
-            f = open(fn, 'r')
-            for line in f:
-                m = re.search(self._function_prefix, line)
-                if m != None:
-                    line = re.sub(r'\(CuTest \*.*', r'', line)
-                    funcs.append(line.strip())
 
-        for func in funcs:
-            self._outfile.write('extern ' + func + '(CuTest *);\n')
+  # dynamically insert the suite additions and the function signatures for each function
+  # in the input list at the marked locations in out's copy of the test driver.
+  def _write_output(self, tests):
+    replacements =  {
+      'function_signatures': (lambda func_name: 'extern void ' + func_name + '(CuTest *);'),
+      'suite_additions': (lambda func_name: '\tSUITE_ADD_TEST(suite, ' + func_name + ');')
+    }
 
-        self._outfile.write('\n')
-        self._outfile.write('void RunAllTests(void)\n' + '{\n'
-                            + '    int i;\n' + '    FILE *fp;\n'
-                            + '    CuSuite* suite = CuSuiteNew();\n')
+    for keyword, mapping_func in replacements.items():
+      insertion_point = re.compile('{{{_'+ keyword + '_}}}', re.I)
+      i = [i + 1 for i, string in enumerate(self._driver_contents) if insertion_point.search(string)][0]
+      self._driver_contents[i:i] = [mapping_func(func_name) for func_name in tests]
+      
+    self._out.write('\n'.join(self._driver_contents))
+    self._out.close();
 
-        for func in funcs:
-            self._outfile.write('    SUITE_ADD_TEST(suite, '
-                                + func.split()[1] + ');\n')
 
-        self._outfile.write('\n')
-        self._outfile.write('''    CuSuiteRun(suite);
 
-'''
-                            + '''    fp = fopen(UNITTESTLOG, "a+");
-    if(!fp) {
-'''
-                            + '        return;\n' + '''    }
 
-'''
-                            + '    for(i = 0; i < suite->count; i++) {\n'
+  # Go through every file in the _src list and parse it for test function definitions. 
+  # Aggregate the definitions into a list, then use the list to generate a .h file 
+  # containing the function signatures and a .c file defining a function named:
+  # add_all_tests(), which adds all the tests in the aggregated list to the suite.
+  def generate(self):
+    tests = []
+    for file_name in self._src:
+      tests_in_this_file = self._gen_tests_from_file(file_name)
+      if tests_in_this_file:
+        tests += tests_in_this_file 
+   
+    self._write_output(tests) 
 
-                            + '        if(suite->list[i]->assertsFailedCount) {\n'
-                             + '            fprintf(fp, "Failed\\t");\n'
-                             + '        }\n' + '        else {\n'
-                            + '            fprintf(fp, "Passed\\t");\n'
-                            + '        }\n'
-                            + '        fprintf(fp, "%s\\t", suite->list[i]->name);\n'
 
-                            + '        fprintf(fp, "%d\\t", suite->list[i]->assertsPassedCount);\n'
 
-                            + '        fprintf(fp, "%d\\t", suite->list[i]->assertsFailedCount);\n'
-
-                            + '        fprintf(fp, "%d\\t", (suite->list[i]->assertsPassedCount + suite->list[i]->assertsFailedCount));\n'
-
-                            + '        fprintf(fp, "%3.3f\\n", (((float)(suite->list[i]->assertsPassedCount) / (suite->list[i]->assertsPassedCount + suite->list[i]->assertsFailedCount)) * 100));\n'
-                             + '''    }
-
-    fflush(fp);
-'''
-                            + '''    fclose(fp);
-
-'''
-                            + '''    fp = fopen(SUITELOG, "a+");
-
-'''
-                            + '    if(suite->testFailedCount) {\n'
-                            + '        fprintf(fp, "Failed\\t");\n'
-                            + '    }\n' + '    else {\n'
-                            + '        fprintf(fp, "Passed\\t");\n'
-                            + '    }\n'
-                            + '    fprintf(fp, "%d\\t", suite->testPassedCount);\n'
-
-                            + '    fprintf(fp, "%d\\t", suite->testFailedCount);\n'
-
-                            + '    fprintf(fp, "%d\\t", suite->count);\n'
-
-                            + '    fprintf(fp, "%3.3f\\n", ((float)(suite->testPassedCount) / suite->count) * 100);\n'
-                             + '    fflush(fp);\n'
-                            + '''    fclose(fp);
-}
-
-'''
-                            + 'int main(int argc, char *argv[])\n' + '{\n'
-                            + '    RunAllTests();\n' + '    return 0;\n'
-                             + '}\n')
-        self._outfile.close()
 
 
 if __name__ == '__main__':
+  parser = OptionParser()
+  parser.add_option(
+    '-t',
+    '--test-driver',
+    dest='testdriver',
+    help='The C file running the tests. (this is the output file)',
+    metavar='TESTDRIVER'
+  )
+  parser.add_option(
+    '-p',
+    '--prefix',
+    dest='function_prefix',
+    help='Use prefix to find test functions in src files',
+    metavar='FUNCPREFIX',
+    default='^void t_.*',
+  )
 
-    parser = OptionParser()
-    parser.add_option(
-        '-o',
-        '--output',
-        dest='outputfile',
-        help='Write func main to file, default is stdout',
-        metavar='OUTPUTFILE',
-        default='stdout',
-        )
+  (options, args) = parser.parse_args()
+  gt = GenTest(options.testdriver, args, options.function_prefix)
+  gt.generate()  
 
-    parser.add_option(
-        '-p',
-        '--prefix',
-        dest='function_prefix',
-        help='Use prefix to find test functions in src files',
-        metavar='FUNCPREFIX',
-        default='^void t_.*',
-        )
 
-    (options, args) = parser.parse_args()
-
-    f = sys.stdout
-    if options.outputfile != 'stdout':
-        f = open(options.outputfile, 'w+')
-
-    gt = GenTest(f, args, options.function_prefix)
-    gt.generate()
