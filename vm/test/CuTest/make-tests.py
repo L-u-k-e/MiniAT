@@ -14,6 +14,9 @@ class GenTest(object):
     self._driver_contents = [line.rstrip() for line in open('vm/test/CuTest/test.c')]
     self._out = open(driver, 'w')
 
+
+
+
   # Open the file with the provided name and parse it for lines that start with
   # the identified prefix. Use these lines to figure out the actual names of 
   # all the test functions in the file and aggregate the names into a list. 
@@ -25,8 +28,8 @@ class GenTest(object):
 
 
 
-  # dynamically insert the suite additions and the function signatures for each function
-  # in the input list at the marked locations in out's copy of the test driver.
+  # Dynamically insert the suite additions and the function signatures for each function
+  # name in the input list at the marked locations in out's copy of the test driver.
   def _write_output(self, tests):
     replacements =  {
       'function_signatures': (lambda func_name: 'extern void ' + func_name + '(CuTest *);'),
@@ -44,10 +47,9 @@ class GenTest(object):
 
 
 
-  # Go through every file in the _src list and parse it for test function definitions. 
-  # Aggregate the definitions into a list, then use the list to generate a .h file 
-  # containing the function signatures and a .c file defining a function named:
-  # add_all_tests(), which adds all the tests in the aggregated list to the suite.
+  # Go through every file in the src list and parse it for test function definitions. 
+  # Aggregate the definitions into a list, then call _write_output to do the substitution
+  # and write to the file. 
   def generate(self):
     tests = []
     for file_name in self._src:
