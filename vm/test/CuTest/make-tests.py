@@ -35,7 +35,7 @@ class GenTest(object):
 
     for keyword, mapping_func in replacements.items():
       insertion_point = re.compile('{{{_'+ keyword + '_}}}', re.I)
-      i = [i + 1 for i, string in enumerate(self._driver_contents) if insertion_point.search(string)][0]
+      i = next(i + 1 for i, string in enumerate(self._driver_contents) if insertion_point.search(string))
       self._driver_contents[i:i] = [mapping_func(func_name) for func_name in tests]
       
     self._out.write('\n'.join(self._driver_contents))
